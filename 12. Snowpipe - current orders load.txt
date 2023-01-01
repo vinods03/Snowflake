@@ -1,0 +1,59 @@
+// We want to use the same integration object for the new bucket as well
+
+create or replace storage integration snowflake_aws_ecommerce_s3_intg
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE 
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::100163808729:role/ecommerce-role-for-snwflake'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://vinod-ecommerce-data-from-rds/','s3://vinod-ecommerce-data-from-rds-current/')
+  COMMENT = 'This an optional comment' 
+  
+  DESC integration snowflake_aws_ecommerce_s3_intg;
+
+// You need to perform this step again because STORAGE_AWS_EXTERNAL_ID would have changed because of the new bucket added
+// Without this step, the pipe creation was failing with permission related erro
+  
+Go back to the IAM role you created -> Trust Relationships - Edit Trust Policy
+Copy the STORAGE_AWS_IAM_USER_ARN from above DESC command into the Principal AWS tag and the STORAGE_AWS_EXTERNAL_ID into the sts:ExternalId tag
+
+CREATE OR REPLACE stage metadata_db.external_stages.current_orders
+    URL = 's3://vinod-ecommerce-data-from-rds-current/orders/'
+    STORAGE_INTEGRATION = snowflake_aws_ecommerce_s3_intg
+    FILE_FORMAT = metadata_db.file_formats.csv_fileformat;
+
+CREATE OR REPLACE pipe metadata_db.pipes.current_orders_pipe
+auto_ingest = TRUE
+AS
+COPY INTO ecommerce_database.public.orders_staging
+FROM @metadata_db.external_stages.current_orders;
+
+DESC pipe metadata_db.pipes.current_orders_pipe;
+
+SELECT SYSTEM$PIPE_STATUS('metadata_db.pipes.current_orders_pipe');
+
+ALTER PIPE metadata_db.pipes.current_orders_pipe SET PIPE_EXECUTION_PAUSED = true; (stop the pipe to make any change in the pipe)
+
+ALTER PIPE metadata_db.pipes.current_orders_pipe SET PIPE_EXECUTION_PAUSED = false; (start the pipe)
+ 
+// Snowpipe error message in last 2 hours - might be a very generic message that might not help in debugging
+
+SELECT * FROM TABLE
+  (VALIDATE_PIPE_LOAD
+    (
+    PIPE_NAME => 'metadata_db.pipes.current_orders_pipe',
+    START_TIME => DATEADD(HOUR,-2,CURRENT_TIMESTAMP())
+    )
+  )
+
+// COPY command history from table to see error massage
+
+SELECT * FROM TABLE 
+ (INFORMATION_SCHEMA.COPY_HISTORY
+   (
+   table_name  =>  'ecommerce_database.public.orders_staging',
+   START_TIME => DATEADD(HOUR,-2,CURRENT_TIMESTAMP())
+   )
+)
+
+
+

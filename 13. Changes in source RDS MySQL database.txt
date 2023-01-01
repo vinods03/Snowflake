@@ -1,0 +1,15 @@
+use dev;
+
+INSERT INTO orders 
+(order_id,customer_id,order_status,order_purchase_timestamp,order_approved_at,order_delivered_carrier_date,order_delivered_customer_date,order_estimated_delivery_date) 
+values ('abc','123','delivered','2017-10-02 06:56:33.0','2017-10-02 07:07:15.0','2017-10-04 15:55:00.0','2017-10-10 17:25:13.0','2017-10-17 20:00:00.0');
+
+INSERT INTO customers (customer_id,customer_unique_id,customer_zip_code_prefix,customer_city,customer_state) 
+values ('123','456',14409,'chennai','TN');
+
+update customers
+set customer_city = 'BLR', customer_state = 'KA'
+where customer_id = 'bf6181a85bbb4115736c0a8db1a53be3';
+
+commit;
+

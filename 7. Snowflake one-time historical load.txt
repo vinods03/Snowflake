@@ -1,0 +1,24 @@
+1. Load the table
+
+COPY INTO ecommerce_database.public.orders
+FROM @metadata_db.external_stages.historical_orders;
+
+2. Validation
+
+Run select * from orders; and validate the columns
+
+Run select count(*) from orders; and verify if the count in snowflake matches the count in Athena.
+
+
+Suppose , for some reason, you have to truncate the table in Snowflake and reload, use below command:
+Else, Snowflake will not process files that have already been processed.
+
+COPY INTO ecommerce_database.public.orders
+FROM @metadata_db.external_stages.historical_orders
+FORCE = TRUE;
+
+
+
+
+
+

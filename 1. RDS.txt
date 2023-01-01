@@ -1,0 +1,36 @@
+Created MySQL 5.7.33 free-tier RDS. This is launched in the default VPC with the default VPC security group. 
+This DB is configured as publicly accessible so that MySQL Workbench from my local computer can connect to the RDS instance.
+The inbound rules of the security group associated with the RDS instance must allow MYSQL traffic on port 3306 from my IP.
+
+DB instance identifier: mysql-ecommerce-database
+Initial database name: dev
+Username / Password: admin / Test1234
+
+Enable automated backups is disabled -> might have to be enabled if we are using DMS instead of AWS Data Pipeline
+Enable encryption is enabled
+
+Login to the RDS instance using MySQL Workbench installed on your machine.
+Create the required tables.
+
+use dev;
+
+CREATE TABLE `customers` (
+  `customer_id` varchar(32) NOT NULL,
+  `customer_unique_id` varchar(32) NOT NULL,
+  `customer_zip_code_prefix` decimal(10,0) NOT NULL,
+  `customer_city` varchar(27) NOT NULL,
+  `customer_state` varchar(2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+
+
+CREATE TABLE `orders` (
+  `order_id` varchar(32) NOT NULL,
+  `customer_id` varchar(32) NOT NULL,
+  `order_status` varchar(11) NOT NULL,
+  `order_purchase_timestamp` timestamp NULL DEFAULT NULL,
+  `order_approved_at` timestamp NULL DEFAULT NULL,
+  `order_delivered_carrier_date` timestamp NULL DEFAULT NULL,
+  `order_delivered_customer_date` timestamp NULL DEFAULT NULL,
+  `order_estimated_delivery_date` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+

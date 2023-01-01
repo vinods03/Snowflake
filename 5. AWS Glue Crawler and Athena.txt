@@ -1,0 +1,12 @@
+To verify easily if the data from RDS has been moved to S3 as expected, we can quickly setup the Glue Crawler and run some queries using athena.
+
+Setup a On demand Glue Crawler (ecommerce-orders-historical) with Data Source as S3 -> s3://vinod-ecommerce-data-from-rds/orders/historical and Table Prefix as orders_
+The Glue Data Catalog table is configured to be created in a new Glue Catalog database ecommerce-database.
+Rename the columns in the Glue Data Catalog table - referring the join between orders and customers tables in the AWS Data Pipeline setup will be helpful to rename the columns.
+
+Also note that the Data Pipeline stores the files under a timestamp folder as indicated in the DataNodes -> S3OutputLocation path of the pipeline.
+#{myOutputS3Loc}/#{format(@scheduledStartTime, 'YYYY-MM-dd-HH-mm-ss')}.
+This column can be named as the create_timestamp column -> this is not part of the RDS data.
+
+Once the Glue Crawler completes, verify in Athena using the query:
+SELECT * FROM "AwsDataCatalog"."ecommerce-database"."orders_historical" limit 10;

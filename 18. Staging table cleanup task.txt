@@ -1,0 +1,16 @@
+-- suspend the parent task first
+ALTER TASK orders_data_changes SUSPEND;
+
+-- add successor task
+CREATE OR REPLACE TASK orders_staging_truncate
+    WAREHOUSE = COMPUTE_WH
+    AFTER orders_data_changes
+    AS 
+    TRUNCATE table ecommerce_database.public.orders_staging;
+ 
+-- start successor task
+ALTER TASK orders_staging_truncate RESUME;
+
+-- start parent task
+ALTER TASK orders_data_changes RESUME;
+

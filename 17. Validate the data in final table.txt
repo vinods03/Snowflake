@@ -1,0 +1,12 @@
+In snowflake, check if the new order_id 'abc' is now available in the final 'orders' table.
+select * from commerce_database.public.orders where order_id = 'abc';
+
+Also verify that the customer_city, customer_state have go updated for the customer_id bf6181a85bbb4115736c0a8db1a53be3
+select * from commerce_database.public.orders where customer_id = 'bf6181a85bbb4115736c0a8db1a53be3';
+
+Verify the counts as well in the stream as well as the final orders table.
+The stream must be empty once the task has run.
+select count(*) from ecommerce_database.public.orders_stream; -- must return 0 records
+
+The count in the final orders tablee must equal the count of the source AWS RDS MySQL table.
+select count(*) from ecommerce_database.public.orders;

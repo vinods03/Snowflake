@@ -1,0 +1,34 @@
+You can choose to delete entrie databases to be sure no resource is left running:
+
+drop database manage_db;
+
+drop database metadata_db;
+
+drop database ecommerce_database;
+
+Or, you can choose to drop individual objects:
+
+show tasks
+
+ALTER TASK ecommerce_database.public.orders_data_changes SUSPEND;
+
+ALTER TASK ecommerce_database.public.orders_staging_truncate SUSPEND;
+
+DROP TASK ecommerce_database.public.orders_data_changes;
+
+DROP TASK ecommerce_database.public.orders_staging_truncate;
+
+SHOW PIPES;
+
+drop pipe metadata_db.pipes.RECENT_ORDERS_PIPE;
+
+drop pipe metadata_db.pipes.CURRENT_ORDERS_PIPE;
+
+show streams;
+
+drop stream ecommerce_database.public.orders_stream;
+
+
+=========================
+
+In AWS, delete the 3 Data Pipelines, the 2 S3 buckets and the RDS instance created for this project.

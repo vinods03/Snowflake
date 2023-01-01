@@ -1,0 +1,69 @@
+1. create warehouse ecommerce_wh with
+warehouse_size = 'MEDIUM'
+auto_suspend = 300 
+auto_resume = true;
+
+2. create database ecommerce_database;
+
+3. create database metadata_db;
+use metadata_db;
+create schema file_formats;
+create schema external_stages;
+
+4. Create the storage integration object:
+
+Go to AWS IAM -> Create Role (ecommerce-role-for-snwflake)
+Select the Trusted entity type as AWS account - to allow entities in other AWS accounts or 3rd party services to perform actions in this account
+In the Options, select 'Require external ID' and give the value as 00000 initially.
+Attach AmazonS3FullAccess to this role
+
+  create or replace storage integration snowflake_aws_ecommerce_s3_intg
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE 
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::100163808729:role/ecommerce-role-for-snwflake'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://vinod-ecommerce-data-from-rds/')
+  COMMENT = 'This an optional comment' 
+
+DESC integration snowflake_aws_ecommerce_s3_intg;
+
+Go back to the IAM role you created -> Trust Relationships - Edit Trust Policy
+Copy the STORAGE_AWS_IAM_USER_ARN from above DESC command into the Principal AWS tag and the STORAGE_AWS_EXTERNAL_ID into the sts:ExternalId tag
+
+5. CREATE OR REPLACE file format metadata_db.file_formats.csv_fileformat
+    type = csv
+    field_delimiter = ','
+    skip_header = 0
+    null_if = ('NULL','null')
+    empty_field_as_null = TRUE    
+    FIELD_OPTIONALLY_ENCLOSED_BY = '"'    
+    
+6.  CREATE OR REPLACE stage metadata_db.external_stages.historical_orders
+    URL = 's3://vinod-ecommerce-data-from-rds/orders/historical/'
+    STORAGE_INTEGRATION = snowflake_aws_ecommerce_s3_intg
+    FILE_FORMAT = metadata_db.file_formats.csv_fileformat
+
+
+7. Create the table
+
+use ecommerce_database;
+
+CREATE TABLE public.orders (
+	order_id VARCHAR(50) , 
+	order_status VARCHAR(35) , 
+	customer_id VARCHAR(100) , 
+	order_approved_at TIMESTAMP, 
+	order_delivered_carrier_date TIMESTAMP, 
+	order_delivered_customer_date TIMESTAMP, 
+	order_estimated_delivery_date TIMESTAMP, 
+	order_purchase_timestamp TIMESTAMP, 
+	customer_city VARCHAR(50) , 
+	customer_state VARCHAR(10) , 
+	customer_zip_code_prefix DECIMAL 
+);
+
+
+
+
+
+

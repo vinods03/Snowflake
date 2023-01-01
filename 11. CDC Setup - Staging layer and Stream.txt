@@ -1,0 +1,22 @@
+use ecommerce_database;
+
+CREATE TRANSIENT TABLE public.orders_staging (
+	order_id VARCHAR(50) , 
+	order_status VARCHAR(35) , 
+	customer_id VARCHAR(100) , 
+	order_approved_at TIMESTAMP, 
+	order_delivered_carrier_date TIMESTAMP, 
+	order_delivered_customer_date TIMESTAMP, 
+	order_estimated_delivery_date TIMESTAMP, 
+	order_purchase_timestamp TIMESTAMP, 
+	customer_city VARCHAR(50) , 
+	customer_state VARCHAR(10) , 
+	customer_zip_code_prefix DECIMAL 
+);
+
+create or replace stream orders_stream on table public.orders_staging;
+
+SHOW STREAMS;
+
+DESC STREAM orders_stream;
+

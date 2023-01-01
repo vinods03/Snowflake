@@ -1,0 +1,55 @@
+CREATE OR REPLACE TASK orders_data_changes
+    WAREHOUSE = ECOMMERCE_WH
+    SCHEDULE = '60 MINUTE'
+    WHEN SYSTEM$STREAM_HAS_DATA('orders_stream')
+    AS 
+
+merge into orders final_tbl
+using orders_stream stream
+on final_tbl.order_id = stream.order_id
+
+-- UPDATE condition               
+when matched  
+    then update 
+    set final_tbl.order_status = stream.order_status,
+        final_tbl.customer_id = stream.customer_id,
+        final_tbl.order_approved_at = stream.order_approved_at,
+        final_tbl.order_delivered_carrier_date = stream.order_delivered_carrier_date,
+        final_tbl.order_delivered_customer_date = stream.order_delivered_customer_date,
+        final_tbl.order_estimated_delivery_date = stream.order_estimated_delivery_date,
+        final_tbl.order_purchase_timestamp = stream.order_purchase_timestamp,
+        final_tbl.customer_city = stream.customer_city,
+        final_tbl.customer_state = stream.customer_state,
+        final_tbl.customer_zip_code_prefix = stream.customer_zip_code_prefix
+
+-- INSERT condition
+when not matched 
+    then insert 
+    (
+      order_id, order_status, customer_id, order_approved_at, order_delivered_carrier_date, order_delivered_customer_date, order_estimated_delivery_date, order_purchase_timestamp,                 customer_city, customer_state, customer_zip_code_prefix
+    )
+    values
+    (
+      stream.order_id, stream.order_status, stream.customer_id, stream.order_approved_at, stream.order_delivered_carrier_date, stream.order_delivered_customer_date,                         stream.order_estimated_delivery_date, stream.order_purchase_timestamp, stream.customer_city, stream.customer_state, stream.customer_zip_code_prefix
+    );
+
+Note that, we are not performing delete here.
+
+You can verify the status of the tasks using the below commands:
+
+show tasks;
+
+select *
+  from table(information_schema.task_history())
+  order by scheduled_time desc;
+    
+// See results for a specific Task in a given time
+select * from table
+   (information_schema.task_history
+    (
+    scheduled_time_range_start => dateadd('hour',-4,current_timestamp()),
+    result_limit => 5,
+    task_name => 'orders_data_changes'
+    )
+   );
+  

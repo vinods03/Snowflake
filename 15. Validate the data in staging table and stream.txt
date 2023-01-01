@@ -1,0 +1,9 @@
+// Validate the data in staging table
+// Check if all the data in S3 'current' data folder is available in staging area.
+
+SELECT * FROM ecommerce_database.public.orders_staging;   
+
+// Validate the data in stream
+// all the staging records must be available in the stream as well
+
+select * from ecommerce_database.public.orders_stream;

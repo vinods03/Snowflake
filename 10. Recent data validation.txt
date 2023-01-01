@@ -1,0 +1,11 @@
+After the Pipeline has run and the recent changes are available in the "recent" folder of the S3 bucket, run the below query in Snowflake to verify the count: 
+select count(*) from ecommerce_database.public.orders;
+
+Also, in the AWS Glue Crawler, add the data source s3://vinod-ecommerce-data-from-rds/orders/recent on top of the existing s3://vinod-ecommerce-data-from-rds/orders/historical and run the crawler. Another Glue Catalog table "orders_recent" will be created in addition to the already created "orders_historical" table. Rename the columns in the "orders_recent" table also similar to the orders_historical table. Run the below queries in Athena:
+
+select count(*) from orders_recent;
+select count(*) from order_historical;
+
+The sum of these 2 must match the count in Snowflake.
+
+Also, you can validate the counts with the source RDS MySQL table.

@@ -1,0 +1,53 @@
+At the time of Creating a pipeline, provide a name for the pipeline and provide a template -> Full Copy of RDS MySQL table to S3.
+Then, under the "Parameters" section, provide the RDS DB identifier, username, password, table name. Database Name will be provided later in the Architect section.
+Also, provide the output S3 bucket / folder name (s3://vinod-ecommerce-data-from-rds/orders/historical). 
+Make sure the S3 bucket is present. The folders within the bucket can be created by the Pipeline itself.
+Set the schedule of the pipeline to "On Activation".
+You can also provide S3 path for logs if you enable logging.
+Provide the EC2 instance type on which the copy statement will be executed.
+Provide the schedule for the pipeline or this can be "On Activation" only.
+Attach IAM roles to the pipeline - basically must have access to source RDS, target S3, ec2, iam etc.
+Now, instead of activating, Edit in Architect:
+
+In Data Nodes -> SourceRDSTable, you can override the default query that is created based on the RDS table name, with your own customized query - you can join 2 tables, add a filter etc.
+This is the query i used to transfer data from MySQL to S3.
+
+select 
+a.order_id,
+a.order_status,
+a.customer_id,
+a.order_approved_at,
+a.order_delivered_carrier_date,
+a.order_delivered_customer_date,
+a.order_estimated_delivery_date,
+a.order_purchase_timestamp,
+b.customer_city,
+b.customer_state,
+b.customer_zip_code_prefix
+from orders a 
+join customers b
+on a.customer_id = b.customer_id
+where date(a.order_purchase_timestamp) <= '2018-09-31'
+
+
+In DataNodes -> S3OutputLocation, if needed, you can remove the "Directory" parameter and instead add an Optional field - File Path.
+Give the path / name of the file in which you want the RDS data to be copied.
+The "Directory" parameter will create a dynamic file based on timestamp.
+
+In "Others", add an Optional field "Database Name" and provide the name of the database in RDS where the source tables / data is available.
+
+Now, when you save and activate you should see your pipeline running.
+
+
+-------------- Issues faced --------------------
+
+
+Check the S3 logs if your pipeline is not moving to RUNNING state for a long time.
+This will usually happen if the IAM roles attached to the pipeline do not give all the required access.
+The logs will clearly indicate which privileges are missing.
+
+
+Also, i gave the S3 output location as s3://vinod-ecommerce-data-from-rds/orders/historical instead of s3://vinod-ecommerce-data-from-rds/orders/historical/
+The pipeline adds another / at the end and the files get deliverd in s3://vinod-ecommerce-data-from-rds/orders/historical//$date-format folder.
+Athena doesn't support table location paths that include a double slash (//). For example, the following LOCATION path returns empty results: s3://doc-example-bucket/myprefix//input//
+

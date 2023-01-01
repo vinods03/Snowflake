@@ -1,0 +1,48 @@
+CREATE OR REPLACE SCHEMA metadata_db.pipes;
+
+CREATE OR REPLACE stage metadata_db.external_stages.recent_orders
+    URL = 's3://vinod-ecommerce-data-from-rds/orders/recent/'
+    STORAGE_INTEGRATION = snowflake_aws_ecommerce_s3_intg
+    FILE_FORMAT = metadata_db.file_formats.csv_fileformat;
+
+CREATE OR REPLACE pipe metadata_db.pipes.recent_orders_pipe
+auto_ingest = TRUE
+AS
+COPY INTO ecommerce_database.public.orders
+FROM @metadata_db.external_stages.recent_orders;
+
+DESC pipe recent_orders_pipe;
+
+Copy the notification_channel value.
+Go to AWS -> S3 bucket (vinod-ecommerce-data-from-rds) -> Properties -> Create Event Notification. 
+Set the Destination Type as SQS Queue, Prefix -> Not applicable here (the stage is set to read from recent/ folder only and that is enough), Destination (Enter SQS queue ARN) as the above copied notification_channel value
+
+SELECT SYSTEM$PIPE_STATUS('recent_orders_pipe');
+
+ALTER PIPE metadata_db.pipes.recent_orders_pipe SET PIPE_EXECUTION_PAUSED = true; (stop the pipe to make any change in the pipe)
+
+ALTER PIPE metadata_db.pipes.recent_orders_pipe SET PIPE_EXECUTION_PAUSED = false; (start the pipe)
+ 
+// Snowpipe error message in last 2 hours - might be a very generic message that might not help in debugging
+
+SELECT * FROM TABLE
+  (VALIDATE_PIPE_LOAD
+    (
+    PIPE_NAME => 'metadata_db.pipes.recent_orders_pipe',
+    START_TIME => DATEADD(HOUR,-2,CURRENT_TIMESTAMP())
+    )
+  )
+
+// COPY command history from table to see error massage
+
+SELECT * FROM TABLE 
+ (INFORMATION_SCHEMA.COPY_HISTORY
+   (
+   table_name  =>  'ecommerce_database.public.orders',
+   START_TIME => DATEADD(HOUR,-2,CURRENT_TIMESTAMP())
+   )
+)
+
+
+// Validate the data    
+SELECT * FROM ecommerce_database.public.orders;   
