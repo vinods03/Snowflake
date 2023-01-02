@@ -1,25 +1,25 @@
 This project is about moving data from transaction database (MySQL RDS) in AWS into a Snowflake datawarehouse.
 The key snowflake concepts covered here are:
 
-Storage Integration Object
-File format Object
-Virtual Warehouses
-Stages
-Table types 
-Copy command
-Snowpipe
-Streams
-Tasks & Task hierarchy
-Time Travel
-Data Masking
+Storage Integration Object,
+File format Object,
+Virtual Warehouses,
+Stages,
+Table types,
+Copy command,
+Snowpipe,
+Streams,
+Tasks & Task hierarchy,
+Time Travel,
+Data Masking and
 Materialized views
 
 The key AWS concepts covered here are:
 
-AWS Data Pipeline
-S3, S3 Event notification
-IAM role and Trust relationship between AWS and 3rd party
-Glue Crawler
+AWS Data Pipeline,
+S3, S3 Event notification,
+IAM role and Trust relationship between AWS and 3rd party,
+Glue Crawler and
 Athena
 
 There are 3 flows created in this project. A diagrammatic representation of the 3 flows is available in the "Architecture Diagram" PPT.
